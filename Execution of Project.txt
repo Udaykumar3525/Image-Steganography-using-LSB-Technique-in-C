@@ -1,0 +1,549 @@
+---> Flow Of Execution of Project (Everything About Encoding)
+
+do_encoding()
+ ├── open_files()
+ ├── check_capacity()
+ │     ├── get_image_size_for_bmp()
+ │     └── get_file_size()
+ ├── copy_bmp_header()
+ ├── encode_magic_string()
+ │     └── encode_data_to_image()
+ │           └── encode_byte_to_lsb()
+ ├── encode_secret_file_extn()
+ │     └── encode_data_to_image()
+ │           └── encode_byte_to_lsb()
+ ├── encode_secret_file_size()
+ │     └── encode_size_to_lsb()
+ ├── encode_secret_file_data()
+ │     └── encode_data_to_image()
+ │           └── encode_byte_to_lsb()
+ └── copy_remaining_img_data()
+
+-----------------------------------------------------------------------------------------------------
+---> About Functions (Defibnitions And Calls)
+1.OperationType check_operation_type(char *argv[])
+ - rogram supports encode / decode ,This function decides WHAT user wants
+ - Why argument is char *argv[], Command-line arguments are stored in argv ,argv[1] contains -e or -d
+   Function needs only arguments, not structure
+ - Why return type is OperationType ,We want meaningful return values: e_encode ,e_decode,e_unsupported
+
+2.Status read_and_validate_encode_args(int argc, char *argv[], EncodeInfo *encInfo)
+- Validate: .bmp input image , .txt secret file ,output file name,Store validated values into structure
+- argc	           To check argument count
+  argv	           To read filenames
+  EncodeInfo *	   To store validated data
+- Structure pointer is mandatory
+- Function call - read_and_validate_encode_args(argc, argv, &encInfo);
+
+3.status do_encoding(EncodeInfo *encInfo)
+- Why argument is EncodeInfo *
+  Needs: file pointers, image size, secret size, Needs to update structure
+-Function call - do_encoding(&encInfo);
+
+4.Status open_files(EncodeInfo *encInfo)
+-Why this function exists -> Open: source image, secret file, stego image , Store file pointers into structure
+- Why pass structure pointer, File pointers must be accessible everywhere, Function modifies structure
+
+5.uint get_image_size_for_bmp(FILE *fptr_image)
+- Why this function exists, BMP stores width & height at fixed offsets, This function calculates image capacity
+- Why only FILE * - Function needs only image file, No structure modification
+- Function call - get_image_size_for_bmp(encInfo->fptr_src_image);
+- Inside this -  fseek(fptr_image, 18, SEEK_SET);
+
+6.uint get_file_size(FILE *fptr);
+- Why this function exists, To calculate secret file size, Used for capacity check and encoding size
+- Why only FILE * - File pointer is enough, No structure needed
+- Execution flow -> Called inside check_capacity()
+
+7.Status check_capacity(EncodeInfo *encInfo);
+- Why this function exists -> Ensure image can hold..magic string,extension,secret size,secret data
+- Why structure pointer -->Needs image file pointer, secret file pointer, Stores calculated sizes
+
+8.Status copy_bmp_header(FILE *src, FILE *dest);
+- Why this function exists -> BMP header must remain unchanged
+- Why NOT pass structure -> Needs only file pointers, Structure unnecessary
+
+9.Status encode_magic_string(const char *magic, EncodeInfo *encInfo);
+- Why this function exists -> Marks image as encoded,used later in decoding
+- Why arguments, magic -> Data to encode, EncodeInfo *	-> File pointers needed
+
+
+
+1. OperationType check_operation_type(char *argv[])
+- Why this function exists
+  Program supports encode / decode. This function decides WHAT user wants to do.
+- Why argument is char *argv[]
+  Command-line arguments are stored in argv.
+  argv[1] contains -e or -d.
+  Function needs only arguments, not structure.
+- Why return type is OperationType
+- We want meaningful return values: -> e_encode, e_decode, e_unsupported.
+Function call -> res = check_operation_type(argv);
+Execution flow -> First function called from main().
+
+2. Status read_and_validate_encode_args(int argc, char *argv[], EncodeInfo *encInfo)
+- Why this function exists
+  Validate .bmp input image, .txt secret file, output file name.
+  Store validated values into structure. 
+- Why arguments are passed
+  argc → To check argument count
+  argv → To read filenames
+  EncodeInfo * → To store validated data
+
+- Why structure pointer is mandatory
+  Function modifies structure members.
+  Values must be available to all other functions.
+
+Function call -> read_and_validate_encode_args(argc, argv, &encInfo);
+Execution flow -> Called after checking operation type and before do_encoding().
+
+3. Status do_encoding(EncodeInfo *encInfo)
+- Why this function exists
+  This is the MAIN CONTROLLER function of encoding.
+  It calls all encoding steps in correct order.
+- Why argument is EncodeInfo *
+  Needs file pointers, image size, secret size.
+  Needs to update and use structure throughout execution. 
+- Function call -> do_encoding(&encInfo);
+  Execution flow -> Central function where entire encoding happens.
+
+4. Status open_files(EncodeInfo *encInfo)
+- Why this function exists
+  Open source image, secret file, stego image.
+  Store file pointers into structure.
+- Why pass structure pointer
+  File pointers must be accessible in all functions.
+  Function modifies structure members.
+- Function call -> open_files(encInfo);
+  Execution flow -> First function executed inside do_encoding().
+
+5. uint get_image_size_for_bmp(FILE *fptr_image)
+- Why this function exists
+  BMP stores width & height at fixed offsets.
+  This function calculates image capacity.
+- Why only FILE *
+  Function needs only image file.
+  No structure modification is required.
+- Function call ->get_image_size_for_bmp(encInfo->fptr_src_image);
+  Inside this function -> fseek(fptr_image, 18, SEEK_SET);
+  Execution flow > Called inside check_capacity().
+
+6. uint get_file_size(FILE *fptr)
+- Why this function exists
+  To calculate secret file size.
+  Used for capacity check and encoding size.
+- Why only FILE *
+  File pointer alone is enough.
+  No structure needed.
+- Function call -> get_file_size(encInfo->fptr_secret);
+  Execution flow -> Called inside check_capacity().
+
+7. Status check_capacity(EncodeInfo *encInfo)
+- Why this function exists
+  Ensure image can hold:
+  magic string, extension, secret size, secret data.
+- Why structure pointer
+  Needs image file pointer and secret file pointer.
+  Stores calculated sizes inside structure.
+- Function call -> check_capacity(encInfo);  
+  Execution flow -> Second function executed inside do_encoding().
+
+8. Status copy_bmp_header(FILE *src, FILE *dest)
+- Why this function exists
+  BMP header must remain unchanged, otherwise image corrupts.
+- Why NOT pass structure
+  Function needs only source and destination file pointers.
+  Structure is unnecessary.
+- Function call -> copy_bmp_header(encInfo->fptr_src_image,encInfo->fptr_stego_image);
+  Execution flow -> Executed after capacity check.
+
+9. Status encode_magic_string(const char *magic, EncodeInfo *encInfo)
+- Why this function exists
+  Marks image as encoded.
+  Used later during decoding to identify stego image.
+- Why arguments are passed
+  magic → Data to encode
+  EncodeInfo * → File pointers required
+- Function call -> encode_magic_string(MAGIC_STRING, encInfo);
+  Execution flow -> Executed after copying BMP header.
+
+10. Status encode_data_to_image(char *data, int size, FILE *src, FILE *dest)
+- Why this function exists
+  Common function to encode magic string, extension, secret data.
+- Why arguments are passed
+  data → What to encode
+  size → Number of bytes
+  FILE * → Image read and write
+- Function call -> encode_data_to_image(data, size,encInfo->fptr_src_image,encInfo->fptr_stego_image);
+  Execution flow -> Called by multiple encoding functions.
+
+11. Status encode_byte_to_lsb(char data, char *image_buffer)
+- Why this function exists
+  Performs actual LSB encoding of one byte.
+- Why arguments are passed
+  data → One secret byte
+  image_buffer → 8 image bytes
+- why no structure
+  Pure bit manipulation.
+  Independent helper function.
+- Execution flow -> called inside encode_data_to_image().
+
+12. Status encode_secret_file_size(long size, EncodeInfo *encInfo)
+- Why this function exists
+  Encode secret file size so decoder knows how much data to read.
+- Why arguments are passed
+  size → Secret file size
+  EncodeInfo * → File pointers required
+- Execution flow
+  Executed before encoding secret data.
+
+13. Status encode_secret_file_data(EncodeInfo *encInfo)
+- Why this function exists
+  Encode actual secret message data.
+- Why structure pointer
+  Needs secret file pointer and image file pointers.
+- Execution flow -> Executed after encoding secret file size.
+
+14. Status copy_remaining_img_data(FILE *src, FILE *dest)
+- Why this function exists
+  Copy remaining image bytes unchanged.
+- Why NOT pass structure
+  Only file pointers required.
+- Execution flow
+  Last function executed in do_encoding()
+
+--------------------------------------------------------------------------------------------
+--> INTERNAL EXECUTION FLOW – STEP BY STEP (INSIDE OPERATIONS)
+--> PROGRAM START (Runtime Overview)
+
+Program execution starts from main()
+User runs program as: ./a.out -e beautiful.bmp secret.txt stego.bmp
+
+1.Inside main()
+main() receives argc and argv
+Calls check_operation_type(argv)
+Stores returned value in res
+
+2.Inside check_operation_type(char *argv[])
+Reads argv[1]
+Compares:
+argv[1] == "-e" → return e_encode
+argv[1] == "-d" → return e_decode
+Otherwise → return e_unsupported
+Control returns to main()
+
+3.Back to main()
+If operation is e_encode
+Calls:
+read_and_validate_encode_args(argc, argv, &encInfo);
+
+4.Inside read_and_validate_encode_args()
+Step-by-step execution:
+Step 1: Check argc - If arguments are less or more → return e_failure
+Step 2: Validate source image - Check argv[2] contains .bmp
+If valid → store in structure: --> encInfo->src_image_fname = argv[2];
+Step 3: Validate secret file
+Check argv[3] contains .txt
+If valid → store: --> encInfo->secret_fname = argv[3];
+Step 4: Validate output file
+If argv[4] exists → store output filename
+Else → default "stego.bmp"
+Step 5: Return e_success to main()
+
+
+5.Back to main()
+If validation successful
+Calls: do_encoding(&encInfo);
+ENTERING do_encoding() – CORE EXECUTION
+
+6.Inside do_encoding(EncodeInfo *encInfo)
+This function executes ALL encoding steps sequentially.
+6.1.Step 1 – open_files(encInfo)
+Inside open_files():
+Step 1: Open source image , encInfo->fptr_src_image = fopen("beautiful.bmp", "rb");
+Step 2: Open secret file, encInfo->fptr_secret = fopen("secret.txt", "r");
+Step 3: Open stego image, encInfo->fptr_stego_image = fopen("stego.bmp", "wb");
+Step 4: If any fopen() fails → return e_failure 
+        Else → return e_success
+
+6.2.Step 2 – check_capacity(encInfo)
+Inside check_capacity():
+Step 1: Call get_image_size_for_bmp()
+        Inside get_image_size_for_bmp(FILE *fptr_image):
+        Step 1:fseek(fptr_image, 18, SEEK_SET);
+        (Move file pointer to BMP width field)
+        Step 2: fread(&width, sizeof(int), 1, fptr_image);
+        Step 3: fread(&height, sizeof(int), 1, fptr_image);
+        Step 4: image_capacity = width * height * 3;
+        Step 5: Return image_capacity
+        Back to check_capacity():
+Step 2: Call get_file_size(encInfo->fptr_secret)
+        Inside get_file_size(FILE *fptr):
+        Step 1: fseek(fptr, 0, SEEK_END);
+        Step 2: size = ftell(fptr);
+        Step 3: fseek(fptr, 0, SEEK_SET);
+        Step 4: Return size_secret_file
+        Back to check_capacity():
+Step 3: Calculate required bytes:
+Magic string + Extension + Secret size + Secret data
+Step 4: If image capacity >= required bytes → e_success
+        Else → e_failure
+
+6.3.Step 3 – copy_bmp_header()
+Inside copy_bmp_header():
+Step 1: fread(buffer, 54, 1, src_image);
+Step 2: fwrite(buffer, 54, 1, stego_image);
+Step 3: Return e_success
+(BMP header copied unchanged)
+
+6.4.Step 4 – encode_magic_string("#*", encInfo)
+Inside encode_magic_string():
+Calls: encode_data_to_image("#*", 2, src_image, stego_image);
+        Inside encode_data_to_image():
+        Loop runs for each character of magic string
+        For each character:
+        Step 1: fread(buffer, 8, 1, src_image);
+        Step 2: encode_byte_to_lsb(data[i], buffer);
+        Step 3: fwrite(buffer, 8, 1, stego_image);
+Inside encode_byte_to_lsb(char data, char *buffer):
+    Loop runs 8 times
+    For each bit: Extract MSB → LSB
+    Clear LSB of image byte
+    Insert secret bit
+    Return e_success
+
+6.5.Step 5 – encode_secret_file_extn(encInfo)
+
+Reads extension (example .txt)
+Each character encoded same way as magic string
+Uses encode_data_to_image()
+
+6.6.Step 6 – encode_secret_file_size(size, encInfo)
+Inside encode_secret_file_size():
+Step 1: fread(buffer, 32, 1, src_image);
+Step 2: encode_size_to_lsb(size, buffer);
+Step 3: fwrite(buffer, 32, 1, stego_image);
+Inside encode_size_to_lsb():
+    Loop runs 32 times
+    Each bit of file size stored into LSB of image byte
+
+6.7.Step 7 – encode_secret_file_data(encInfo)
+Inside encode_secret_file_data():
+Loop until secret file ends
+For each character: Read 1 byte from secret file
+Call encode_data_to_image() -> Encode into 8 image bytes
+
+6.8.Step 8 – copy_remaining_img_data()
+Inside copy_remaining_img_data():
+Loop until EOF of source image
+Read 1 byte from source image
+Write same byte to stego image
+No modification done
+
+7.End of do_encoding()
+All data encoded successfully
+Function returns e_success
+Control returns to main()
+
+
+---------------------------> DECODING FLOW <--------------------------
+
+do_decoding()
+ ├── open_files()
+ ├── skip_bmp_header()
+ ├── decode_magic_string()
+ │     └── decode_byte_from_lsb()
+ ├── decode_secret_file_extn()
+ │     └── decode_byte_from_lsb()
+ ├── decode_secret_file_size()
+ │     └── decode_size_from_lsb()
+ ├── decode_secret_file_data()
+ │     └── decode_byte_from_lsb()
+ └── (Files closed)
+
+1. Status read_and_validate_decode_args(int argc, char argv[], DecodeInfo decInfo)
+Why this function exists :To validate user’s command-line arguments for decoding.
+To ensure: A .bmp stego image exists, Output filename is correct, Store all validated names into DecodeInfo structure
+Why these arguments are required : 
+argc: To check if required arguments are provided
+argv: To read stego.bmp and optional output.txt
+DecodeInfo *: To store validated filenames
+
+Execution Flow :
+Check if argument count is 2 or 3, Validate .bmp in argv[2]
+If output file not given → default name "output.txt"
+Store data inside decInfo, Return success
+
+Function Call -> read_and_validate_decode_args(argc, argv, &decInfo);
+
+2. Status do_decoding(DecodeInfo decInfo)
+Why this function exists: 
+Acts as the MASTER CONTROLLER for decoding, Executes all decoding steps in correct order.
+Why DecodeInfo pointer is needed:
+Uses file pointers, Stores decoded extension, size, output filename
+Needed across many functions
+
+Function Call -> do_decoding(&decInfo);
+
+Execution Flow : 
+open_files()
+skip_bmp_header()
+decode_magic_string()
+decode_secret_file_extn()
+decode_secret_file_size()
+decode_secret_file_data()
+Close files
+
+3. Status open_files(DecodeInfo decInfo)
+Why this function exists : To open the stego image for reading.
+Why argument is structure pointer : 
+Stores fptr_stego_image inside structure
+Later functions use this pointer
+
+Execution Flow
+Open stego image as "rb"
+If fail → return e_failure
+Else return success
+
+Function Call -> open_files(decInfo);
+
+4. Status skip_bmp_header(FILE fptr_stego_image)
+Purpose - Skip first 54 bytes (BMP header)
+Actual encoded data starts after header
+Why FILE * argument - Only needs image pointer, does NOT modify structure
+
+Execution Flow
+fseek(fptr, 54, SEEK_SET)
+Return success
+
+Function Call -> skip_bmp_header(decInfo->fptr_stego_image);
+
+5. Status decode_magic_string(const char magic, DecodeInfo decInfo)
+Why this function exists : 
+To verify image is actually encoded using your program
+Magic string used in encoding: "#*"
+ 
+Why arguments : 
+magic: the expected string
+decInfo: for file pointer
+
+Execution Flow
+For each character:
+Read 8 bytes
+Call decode_byte_from_lsb()
+Compare with magic string
+If mismatch -> NOT a stego image
+Else return success
+
+Function Call -> decode_magic_string(MAGIC_STRING, decInfo);
+
+6. Status decode_byte_from_lsb(char data, char image_buffer)
+Why this function exists :
+Performs actual extraction of 1 character from 8 LSBs.
+Reverse process of encode_byte_to_lsb().
+
+Execution Flow :
+Read LSB of each byte (8 iterations)
+Build char bit-by-bit
+Store into *data
+
+Function Call :
+Called internally inside:
+decode_magic_string()
+decode_secret_file_extn()
+decode_secret_file_data()
+
+7. Status decode_secret_file_extn(DecodeInfo decInfo)
+Why this function exists :
+Extract file extension (.txt or .c or .bin)
+Saved during encoding
+
+Execution Flow :
+Loop MAX_FILE_SUFFIX times:
+Read 8 bytes from image
+Call decode_byte_from_lsb()
+Store in structure
+
+Function Call -> decode_secret_file_extn(decInfo);
+
+8. Status decode_secret_file_size(DecodeInfo decInfo)
+Why this function exists : 
+To extract 32-bit secret file size
+So decoder knows EXACTLY how many bytes to read
+
+Execution Flow : 
+Read 32 bytes
+decode_size_from_lsb() → convert bits to long
+Store in structure
+
+Function Call -> decode_secret_file_size(decInfo);
+
+9. Status decode_size_from_lsb(long size, char image_buffer)
+Why this function exists : 
+Performs extraction of 32 bits from 32 bytes
+Used only for reading file size
+
+Execution Flow : 
+Loop 32 times
+Read LSB
+Shift + store into long integer
+
+Function Call -> Called inside decode_secret_file_size()
+
+10. Status decode_secret_file_data(DecodeInfo decInfo)
+Why this function exists : 
+Extract actual hidden text
+Write it into output file
+
+Execution Flow : 
+Loop size_secret_file times:
+Read 8 bytes from stego image
+decode_byte_from_lsb() → extract secret byte
+Write to output file
+
+Function Call -> decode_secret_file_data(decInfo);
+
+--> INTERNAL EXECUTION FLOW – STEP-BY-STEP 
+
+User runs: ./a.out -d stego.bmp output.txt
+
+1. Program starts -> main()
+Receives argc, argv
+Calls: op_type = check_operation_type(argv);
+
+2. If op_type == e_decode
+Call: read_and_validate_decode_args(argc, argv, &decInfo);
+
+3. Entering do_decoding(decInfo)
+  Step 1: open_files(decInfo)
+  Opens stego.bmp
+  Stores file pointer
+  Success → move forward
+
+  Step 2: skip_bmp_header(FILE fptr)
+  fseek(fp, 54, SEEK_SET);
+  Now file pointer is at first encoded byte.
+
+  Step 3: decode_magic_string()
+  Reads magic → Should be "#*"
+  If mismatch → STOP decoding
+  Else → verified success
+
+  Step 4: decode_secret_file_extn()
+  Reads extension like “.txt”
+
+  Step 5: decode_secret_file_size()
+  Reads 32 bits (32 bytes)
+  Calculates original file size
+
+  Step 6: decode_secret_file_data()
+  Reads: size_secret_file * 8 bytes
+  Writes recovered text to output file.
+
+  Step 7: Close files
+  fclose(stego_image);
+  fclose(output_file);
+4.EXIT
+
+----------------------------------------------------------------------------------------
+Thank you.
