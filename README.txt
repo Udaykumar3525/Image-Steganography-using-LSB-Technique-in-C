@@ -1,8 +1,9 @@
-------------> LSB IMAGE STEGANOGRAPHY PROJECT <---------------
+                      ------------> LSB IMAGE STEGANOGRAPHY PROJECT <---------------
 
 Name : Udaykumar Upputuri
 Mail : udayupputuri3525@gmail.com
 
+---------------------------------------------------------------------------------------------------------------------------
 
 What is This Project?
 This project hides secret text inside a BMP image using Least Significant Bit (LSB) technique.
@@ -138,14 +139,17 @@ Encoding Output Example -->
 Secret file set to: secret.txt
 Reading and validation of Arguments done Successfully ✅
 Starting Encoding Process 🚀.....
-Opening required files 📂 ....Opened succssfullly ✔️ 
-Checking the Image has Enough space to hide secret data or not 🖼️  ....Found ok 
-Copying Image Header🧾 ....Copied successfully 
-Encoding Magic String ✨ ....Encoded 
-Encoding secret (.txt) File Extenstion 🏷️ ....Encoded 
-Encoding secret File Size 📏 ....Encoded
-Encoding secret File Data 💾 ....Encoded 
-Copying Left Over Data 📥 ....Copied 
+Opening required files 📂 : Opened successfullly 
+Checking the Image has Enough space to hide secret data or not 🖼️  : 
+Total required bytes       : 648 bytes
+Total available bytes      : 613417032 bytes
+Image has Enough Space to Hide 
+Copying first 54 bytes of Image Header🧾 : Header Copied successfully 
+Encoding Magic String ✨ : Encoded 
+Encoding secret (.txt) File Extenstion 🏷️  :  Encoded 
+Encoding secret File Size 📏 : Encoded
+Encoding secret File Data 💾 : Encoded 
+Copying Left Over Data 📥 : Copied 
 Encoding Completed Successfully 🔐 ✔️
 
 Decoding Output Example-->
@@ -153,10 +157,10 @@ Decoding Output Example-->
 Stego image set to: stego.bmp
 Output File not mentioned. Creating output.txt as default
 Starting Decoding Process 🚀.....
-Opening required files 📂 ....Opened succssfullly ✔️ 
-Skipping BMP Header (54Bytes)🧾 .....Done
-Decoding Magic String ✨ ....Done
-Decoding secret (.txt) File Extenstion 🏷️ ....Done
-Decoding secret File Size 📏 ....Done
-Decoding Actual secret Data from image 💾 ....Done
+Opening required files 📂  : Opened succssfullly 
+Skipping BMP Header (54Bytes)🧾  : Skipped
+Decoding Magic String ✨  : Decoded
+Decoding secret (.txt) File Extenstion 🏷️  :  Decoded
+Decoding secret File Size 📏  : Decoded
+Decoding Actual secret Data from image 💾  : Decoded
 Decoding Completed Successfully 🔓 ✔️
