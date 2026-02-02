@@ -223,8 +223,11 @@ Status check_capacity(EncodeInfo *encInfo)
     uint required_bytes = 0;   // stores total image bytes needed for encoding 
 
     //Encoding the magic string --> #* -> 2 chars -> 2 byte = 2 * 8(bits) = 16bytes
-    //magic string size + extension size (int) + extension characters  + secret file size + actual data size in secret file
-    required_bytes =  strlen(MAGIC_STRING) * 8 + sizeof(int) * 8 + strlen(encInfo->extn_secret_file) * 8 +
+    //magic string size + extension size (int) - sizeof(int) * 8+ extension characters  + secret file size + actual data size in secret file
+    //Actual layout -> magic string size + extension size (int) - sizeof(int) * 8  + extension characters  + secret file size + actual data size in secret file
+    //IN our Project - magic "#*" + extension ".txt" + file size (32 bits) + data, 
+    // No extension size stored, in My project it is fixed length , #define MAX_FILE_SUFFIX 4, so extension ALWAYS 4 bytes, just read 4 chars directly, No need for size
+    required_bytes =  strlen(MAGIC_STRING) * 8 + strlen(encInfo->extn_secret_file) * 8 +
                       sizeof(long) * 8 + encInfo->size_secret_file * 8;
 
     printf("\nTotal required bytes       : %u bytes\n", required_bytes);
