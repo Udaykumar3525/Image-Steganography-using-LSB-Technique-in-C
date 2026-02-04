@@ -1,9 +1,9 @@
-                      ------------> LSB IMAGE STEGANOGRAPHY PROJECT <---------------
+                      ---------> LSB IMAGE STEGANOGRAPHY PROJECT <------------
 
 Name : Udaykumar Upputuri
 Mail : udayupputuri3525@gmail.com
 
----------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 What is This Project?
 This project hides secret text inside a BMP image using Least Significant Bit (LSB) technique.
@@ -163,4 +163,5 @@ Decoding Magic String ✨  : Decoded
 Decoding secret (.txt) File Extenstion 🏷️  :  Decoded
 Decoding secret File Size 📏  : Decoded
 Decoding Actual secret Data from image 💾  : Decoded
+
 Decoding Completed Successfully 🔓 ✔️
